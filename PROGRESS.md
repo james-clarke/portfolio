@@ -4,10 +4,21 @@
 
 | Axis | Choice |
 |---|---|
-| Artifact | generative field -> char ramp `" .:-=+*#%@"` |
+| Artifact | waterfall field -> char ramp `" .:-=+*#%@"` |
+| Interaction | cursor slices the water, flow refills the gap |
 | Build | gcc + gdb + ASan, then port |
-| WASM | `clang --target=wasm32 -nostdlib`. |
-| Teaching | memory layout, codegen, contracts -> implement |
+| WASM | `clang --target=wasm32 -nostdlib` |
+| Design | black page, amber accent, monospace |
+| Host | render.com static site |
+| Render | fixed logical grid, scaled to fit container; identical animation at any size |
+| Scope | render first; more changes pending
+
+## Rules
+
+- `src/` allocates nothing. Caller owns the memory.
+- `src/` includes `stdint.h`, `stddef.h`, own headers. No libc, no libm.
+- Flat buffers, index `y*w + x`. No 2D arrays.
+- Time and input arrive as params, never globals.
 
 ## Target layout
 
@@ -17,40 +28,52 @@ portfolio/
 ├── PROGRESS.md
 ├── src/              # portable C
 ├── native/           # terminal driver
-├── web/              # index.html, loader JS, built .wasm
-└── build/            # objects + binaries
+├── web/              # index.html, style, loader JS
+└── build/
+    ├── native/       # objects + binary
+    └── wasm/         # objects + .wasm
 ```
+
+## Field model
+
+one shift per column tick:
+
+- shift column down one cell, bottom-up
+- spawn at top from integer hash, run-length blocks form streams
+- per-shift decay -> streams dim as they fall
+- cut zeroes cells on the segment; flow from above refills it, no heal logic
 
 ## Stages
 
 ### Phase 1: native C
 
-- [ ] **t0 toolchain:**
-      Makefile
-- [ ] **t1 grid:**
-      Fixed `W*H` char buffer, ramp quantization, static frame to stdout
-- [ ] **t2 frame loop:**
-      ANSI clear, `nanosleep`, fixed fps
-- [ ] **t3 field:**
-      Noise -> float per cell → ramp index
-- [ ] **t4 heap:**
-      Terminal size query, `malloc`'d grid, SIGWINCH, `free`
-- [ ] **t5 struct:**
-      `Field` struct + `field_init` / `field_step` / `field_destroy`.
+- [x] **t0 toolchain:**
+      Makefile, per-target obj dirs, `-MMD -MP`, ASan on compile *and* link
+- [x] **t1 grid:**
+      Flat `W*H` char buffer, ramp quantization + clamp, static frame to stdout
+- [x] **t2 frame loop:**
+      ANSI home, absolute-deadline `clock_nanosleep`, measured `dt`
+- [x] **t3 field:**
+      Integer-hash spawn, column advection -> float per cell -> ramp index
+- [x] **t4 struct:**
+      `Field` + `field_bytes` / `field_init` / `field_step(dt)` / `field_cut(x0,y0,x1,y1,r)`. Static memory, caller-owned
 
 ### Phase 2: WASM
 
-- [ ] **t6 build:**
-      `clang --target=wasm32 -nostdlib -Wl,--no-entry --export=...`
-- [ ] **t7 allocator:**
+- [ ] **t5 build:**
+      `clang --target=wasm32 -nostdlib -Wl,--no-entry --export=...`. Hand-write `memset` / `memcpy`
+- [ ] **t6 allocator:**
       Bump allocator over `__heap_base`, `__builtin_wasm_memory_grow`, 64KB pages
-- [ ] **t8 javascript**
-      Instantiate, view `exports.memory` as `Uint8Array`, read grid in place
-- [ ] **t9 render loop:**
-      `requestAnimationFrame` -> `step()` -> paint into `<pre>`
+- [ ] **t7 loader:**
+      Instantiate, view `exports.memory` as `Uint8Array`, re-view after any grow
+- [ ] **t8 render loop:**
+      `requestAnimationFrame` -> `step(dt)` -> `subarray` + `TextDecoder` -> `<pre>`
 
-### Phase 3
+### Phase 3: page
 
-- [ ] **t10 input:** — mouse/scroll into wasm, tunable field params.
-- [ ] **t11 ship:** — `-Oz`, strip, single static HTML page, deploy.
-
+- [ ] **t9 mouse:**
+      Measure cell size from rendered font, `mousemove` -> segment rasterize -> `cut()`
+- [ ] **t10 content:**
+      Name + info over the field, dark/amber palette, project list scaffold hidden
+- [ ] **t11 ship:**
+      `-Oz`, strip, single static page, `render.yaml` static site
