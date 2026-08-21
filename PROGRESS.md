@@ -28,10 +28,11 @@ portfolio/
 ├── PROGRESS.md
 ├── src/              # portable C
 ├── native/           # terminal driver
-├── web/              # index.html, style, loader JS
+├── wasm/             # wasm driver: exports, bump allocator, memset/memcpy
+├── web/              # index.html, loader JS, waterfall.wasm
 └── build/
     ├── native/       # objects + binary
-    └── wasm/         # objects + .wasm
+    └── wasm/         # objects
 ```
 
 ## Field model
@@ -60,13 +61,13 @@ one shift per column tick:
 
 ### Phase 2: WASM
 
-- [ ] **t5 build:**
+- [x] **t5 build:**
       `clang --target=wasm32 -nostdlib -Wl,--no-entry --export=...`. Hand-write `memset` / `memcpy`
-- [ ] **t6 allocator:**
+- [x] **t6 allocator:**
       Bump allocator over `__heap_base`, `__builtin_wasm_memory_grow`, 64KB pages
-- [ ] **t7 loader:**
+- [x] **t7 loader:**
       Instantiate, view `exports.memory` as `Uint8Array`, re-view after any grow
-- [ ] **t8 render loop:**
+- [x] **t8 render loop:**
       `requestAnimationFrame` -> `step(dt)` -> `subarray` + `TextDecoder` -> `<pre>`
 
 ### Phase 3: page
