@@ -23,7 +23,7 @@ native: $(BN)/waterfall
 wasm: web/waterfall.wasm
 
 web/waterfall.wasm: $(WOBJS)
-	$(WCC) $(WFLAGS) -Wl,--no-entry -o $@ $^
+	$(WCC) $(WFLAGS) -Wl,--no-entry -Wl,--strip-all -o $@ $^
 
 $(BW)/%.o: %.c | $(BW)
 	$(WCC) $(WFLAGS) -c -o $@ $<

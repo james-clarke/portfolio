@@ -76,5 +76,5 @@ one shift per column tick:
       Measure cell size from rendered font, `mousemove` -> segment rasterize -> `cut()`
 - [x] **t10 content:**
       Name + info over the field, dark/amber palette, project list scaffold hidden
-- [ ] **t11 ship:**
-      `-Oz`, strip, single static page, `render.yaml` static site
+- [x] **t11 ship:**
+      `-Oz` + `--strip-all`, committed `web/waterfall.wasm` (rebuild on C change), `render.yaml` static site

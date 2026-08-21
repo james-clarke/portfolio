@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: portfolio
+    runtime: static
+    branch: main
+    autoDeploy: true
+    buildCommand: ""
+    staticPublishPath: ./web
