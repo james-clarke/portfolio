@@ -37,7 +37,7 @@ int main(void)
         fprintf(stderr, "mem too small: need %zu\n", field_bytes(W, H));
         return 1;
     }
-    field_init(&f, W, H, (uint32_t)time(NULL), mem);
+    field_init(&f, W, H, (uint32_t)time(NULL), 0.94f, mem);
 
     signal(SIGINT, on_int);
     fputs("\x1b[2J\x1b[?25l", stdout);

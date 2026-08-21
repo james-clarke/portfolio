@@ -4,14 +4,63 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>James Clarke</title>
+<meta name="description" content="James Clarke: systems, graphics, web">
+<link rel="icon" href="data:,">
 <style>
-  html, body { margin: 0; height: 100%; background: #0a0908; }
-  body { display: grid; place-items: center; }
-  pre { color: #ffb000; font: 10px/1 monospace; margin: 0; user-select: none; }
+  :root {
+    --bg: #0a0908;
+    --amber: #ffb000;
+    --text: #e8e4dc;
+    --dim: #8a857c;
+  }
+  html, body { margin: 0; background: var(--bg); }
+  body {
+    font: 16px/1.5 ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+    color: var(--text);
+    min-height: 100svh;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 1.5rem 2rem;
+  }
+  h1 { margin: 0; font-size: 1.1rem; font-weight: 600; letter-spacing: 0.08em; }
+  main {
+    display: grid;
+    justify-items: center;
+    gap: 1.25rem;
+    padding: 2.5rem 0;
+  }
+  #frame {
+    width: min(92vw, 840px);
+    position: relative;
+    overflow: hidden;
+    cursor: crosshair;
+  }
+  #field {
+    position: absolute;
+    top: 0; left: 0;
+    transform-origin: 0 0;
+    margin: 0;
+    color: var(--amber);
+    font: 10px/1 ui-monospace, Menlo, Consolas, monospace;
+    user-select: none;
+    pointer-events: none;
+  }
+  main > p { margin: 0; color: var(--dim); }
 </style>
 </head>
 <body>
-<pre id="field"></pre>
+<header>
+  <h1>James Clarke</h1>
+  <nav></nav>
+</header>
+<main>
+  <div id="frame" aria-hidden="true"><pre id="field"></pre></div>
+  <p>systems, graphics, web</p>
+  <section id="projects" hidden></section>
+</main>
 <script src="main.js"></script>
 </body>
 </html>

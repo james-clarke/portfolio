@@ -7,6 +7,7 @@
 typedef struct {
     int w, h;
     uint32_t seed;
+    float decay;     /* per-shift trail fade; tune to h so streams survive it */
     float *v;        /* w*h cell intensity, 0..1 */
     float *acc;      /* w   column shift accumulator */
     uint32_t *count; /* w   shifts done per column */
@@ -17,7 +18,7 @@ typedef struct {
 size_t field_bytes(int w, int h);
 
 /* Carve mem (field_bytes(w,h) bytes) into f and zero all state. */
-void field_init(Field *f, int w, int h, uint32_t seed, void *mem);
+void field_init(Field *f, int w, int h, uint32_t seed, float decay, void *mem);
 
 /* Advance columns by dt seconds. */
 void field_step(Field *f, float dt);

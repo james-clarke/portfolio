@@ -16,6 +16,8 @@ WOBJS 	:= $(BW)/field.o $(BW)/shim.o
 
 VPATH 	:= src native wasm
 
+all: native wasm
+
 native: $(BN)/waterfall
 
 wasm: web/waterfall.wasm
@@ -43,4 +45,4 @@ clean:
 
 -include $(BN)/*.d $(BW)/*.d
 
-.PHONY: native wasm clean
+.PHONY: all native wasm clean

@@ -42,13 +42,13 @@ static void *balloc(size_t n)
 }
 
 EXPORT("wf_init")
-int wf_init(int w, int h, uint32_t seed)
+int wf_init(int w, int h, uint32_t seed, float decay)
 {
     next = (uintptr_t)&__heap_base;
     void *mem = balloc(field_bytes(w, h));
     if (!mem)
         return -1;
-    field_init(&f, w, h, seed, mem);
+    field_init(&f, w, h, seed, decay, mem);
     return 0;
 }
 

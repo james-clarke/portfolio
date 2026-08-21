@@ -3,7 +3,6 @@
 static const char RAMP[] = " .:-=+*#%@";
 #define RAMP_MAX ((int)sizeof RAMP - 2)
 
-#define DECAY 0.94f      /* per-shift trail fade */
 #define RUN 8u           /* spawn decided per 8-cell block */
 #define DENSITY 2u       /* 1 in 2 blocks is a stream */
 #define SPEED_MIN 6.0f   /* rows per second */
@@ -45,7 +44,7 @@ static void column_shift(Field *f, int x, float head)
     float *v = f->v;
     int w = f->w;
     for (int y = f->h - 1; y >= 1; y--)
-        v[y * w + x] = v[(y - 1) * w + x] * DECAY;
+        v[y * w + x] = v[(y - 1) * w + x] * f->decay;
     v[x] = head;
 }
 
@@ -58,7 +57,7 @@ size_t field_bytes(int w, int h)
          + n;                           /* chars */
 }
 
-void field_init(Field *f, int w, int h, uint32_t seed, void *mem)
+void field_init(Field *f, int w, int h, uint32_t seed, float decay, void *mem)
 {
     size_t n = (size_t)w * (size_t)h;
     unsigned char *p = mem;
@@ -66,6 +65,7 @@ void field_init(Field *f, int w, int h, uint32_t seed, void *mem)
     f->w = w;
     f->h = h;
     f->seed = seed;
+    f->decay = decay;
     f->v = (float *)p;
     p += n * sizeof(float);
     f->acc = (float *)p;

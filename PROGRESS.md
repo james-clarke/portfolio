@@ -10,7 +10,7 @@
 | WASM | `clang --target=wasm32 -nostdlib` |
 | Design | black page, amber accent, monospace |
 | Host | render.com static site |
-| Render | fixed logical grid, scaled to fit container; identical animation at any size |
+| Render | fixed logical grid |
 | Scope | render first; more changes pending
 
 ## Rules
@@ -41,7 +41,7 @@ one shift per column tick:
 
 - shift column down one cell, bottom-up
 - spawn at top from integer hash, run-length blocks form streams
-- per-shift decay -> streams dim as they fall
+- per-shift decay (init param, tuned per driver height) -> streams dim as they fall
 - cut zeroes cells on the segment; flow from above refills it, no heal logic
 
 ## Stages
@@ -72,9 +72,9 @@ one shift per column tick:
 
 ### Phase 3: page
 
-- [ ] **t9 mouse:**
+- [x] **t9 mouse:**
       Measure cell size from rendered font, `mousemove` -> segment rasterize -> `cut()`
-- [ ] **t10 content:**
+- [x] **t10 content:**
       Name + info over the field, dark/amber palette, project list scaffold hidden
 - [ ] **t11 ship:**
       `-Oz`, strip, single static page, `render.yaml` static site
