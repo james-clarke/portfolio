@@ -11,34 +11,19 @@
 <meta property="og:url" content="https://portfolio-6z1w.onrender.com/">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%230a0908'/><text x='8' y='12.5' font-size='11' font-family='monospace' fill='%23ffb000' text-anchor='middle'>@</text></svg>">
-<script>try{const t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch{}</script>
+<script>try{const t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch{}</script>
 <style>
   :root {
-    --bg: #0a0908;
-    --amber: #ffb000;
-    --bright: #ffd75f;
-    --glow: rgba(255, 176, 0, 0.45);
-    --text: #e8e4dc;
-    --dim: #8a857c;
+    color-scheme: dark light;
+    --bg: light-dark(#f2efe9, #0a0908);
+    --amber: light-dark(#a05a00, #ffb000);
+    --bright: light-dark(#6b3c00, #ffd75f);
+    --glow: light-dark(transparent, rgba(255, 176, 0, 0.45));
+    --text: light-dark(#1c1a17, #e8e4dc);
+    --dim: light-dark(#6f6a61, #8a857c);
   }
-  @media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) {
-      --bg: #f2efe9;
-      --amber: #a05a00;
-      --bright: #6b3c00;
-      --glow: transparent;
-      --text: #1c1a17;
-      --dim: #6f6a61;
-    }
-  }
-  :root[data-theme="light"] {
-    --bg: #f2efe9;
-    --amber: #a05a00;
-    --bright: #6b3c00;
-    --glow: transparent;
-    --text: #1c1a17;
-    --dim: #6f6a61;
-  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
   html, body { margin: 0; background: var(--bg); }
   body {
     font: 16px/1.5 ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;

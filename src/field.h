@@ -14,7 +14,14 @@ typedef struct {
     char *chars;     /* w*h last rendered frame */
 } Field;
 
-/* Memory needed for a w*h field. Caller allocates, 4-byte aligned. */
+/* Memory needed for a w*h field. Constant expression so static buffers
+   can be sized exactly at compile time. */
+#define FIELD_BYTES(w, h)                          \
+    ((size_t)(w) * (size_t)(h) * sizeof(float)     \
+     + (size_t)(w) * sizeof(float)                 \
+     + (size_t)(w) * sizeof(uint32_t)              \
+     + (size_t)(w) * (size_t)(h))
+
 size_t field_bytes(int w, int h);
 
 /* Carve mem (field_bytes(w,h) bytes) into f and zero all state. */
@@ -28,5 +35,8 @@ void field_cut(Field *f, int x0, int y0, int x1, int y1, int r);
 
 /* Quantize cells to ramp chars, return f->chars (w*h bytes, row-major). */
 const char *field_chars(Field *f);
+
+/* Intensity ramp used by field_chars. */
+const char *field_ramp(void);
 
 #endif

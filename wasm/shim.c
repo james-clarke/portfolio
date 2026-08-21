@@ -44,6 +44,8 @@ static void *balloc(size_t n)
 EXPORT("wf_init")
 int wf_init(int w, int h, uint32_t seed, float decay)
 {
+    if (w <= 0 || h <= 0 || w > 4096 || h > 4096)
+        return -1;
     next = (uintptr_t)&__heap_base;
     void *mem = balloc(field_bytes(w, h));
     if (!mem)
@@ -68,4 +70,10 @@ EXPORT("wf_chars")
 const char *wf_chars(void)
 {
     return field_chars(&f);
+}
+
+EXPORT("wf_ramp")
+const char *wf_ramp(void)
+{
+    return field_ramp();
 }

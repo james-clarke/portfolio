@@ -3,6 +3,7 @@ const H = 48;
 const DECAY = 0.95;
 const CUT_R = 2;
 const BASE_PX = 10;
+const SPEED_MIN = 6; /* rows per second, matches src/field.c */
 
 async function boot() {
   const res = await fetch("waterfall.wasm");
@@ -18,6 +19,13 @@ async function boot() {
   const dec = new TextDecoder();
   const bright_buf = new Uint8Array(W * H);
 
+  // top three ramp glyphs get the glow overlay
+  const rm = new Uint8Array(e.memory.buffer);
+  let rp = e.wf_ramp(), rlen = 0;
+  while (rm[rp + rlen]) rlen++;
+  const is_bright = new Uint8Array(256);
+  for (let i = Math.max(0, rlen - 3); i < rlen; i++) is_bright[rm[rp + i]] = 1;
+
   // real glyphs before first frame so fit() measures true grid size
   const blank = (" ".repeat(W) + "\n").repeat(H - 1) + " ".repeat(W);
   base.textContent = blank;
@@ -27,6 +35,7 @@ async function boot() {
   function fit() {
     base.style.fontSize = bright.style.fontSize = `${BASE_PX}px`;
     const s = frame_el.clientWidth / base.getBoundingClientRect().width;
+    if (!Number.isFinite(s) || s <= 0) return;
     base.style.fontSize = bright.style.fontSize = `${BASE_PX * s}px`;
     frame_el.style.height = `${base.getBoundingClientRect().height}px`;
   }
@@ -38,7 +47,7 @@ async function boot() {
     const chars = new Uint8Array(e.memory.buffer, ptr, W * H);
     for (let i = 0; i < W * H; i++) {
       const c = chars[i];
-      bright_buf[i] = c === 35 || c === 37 || c === 64 ? c : 32; /* # % @ */
+      bright_buf[i] = is_bright[c] ? c : 32;
     }
     const rows = new Array(H);
     const brows = new Array(H);
@@ -50,23 +59,31 @@ async function boot() {
     bright.textContent = brows.join("\n");
   }
 
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    for (let i = 0; i < 40; i++)
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let px = 0, py = 0, has_prev = false;
+  frame_el.addEventListener("pointermove", (ev) => {
+    const r = base.getBoundingClientRect();
+    if (!(r.width > 0 && r.height > 0)) return;
+    let x = Math.floor(((ev.clientX - r.left) / r.width) * W);
+    let y = Math.floor(((ev.clientY - r.top) / r.height) * H);
+    x = x < 0 ? 0 : x >= W ? W - 1 : x;
+    y = y < 0 ? 0 : y >= H ? H - 1 : y;
+    if (!has_prev) { px = x; py = y; has_prev = true; }
+    e.wf_cut(px, py, x, y, CUT_R);
+    px = x; py = y;
+    if (reduced) draw();
+  });
+  frame_el.addEventListener("pointerleave", () => { has_prev = false; });
+
+  if (reduced) {
+    // settle: long enough for the slowest column to fill all H rows
+    const steps = Math.ceil(H / SPEED_MIN / 0.1);
+    for (let i = 0; i < steps; i++)
       e.wf_step(0.1);
     draw();
     return;
   }
-
-  let px = -1, py = -1;
-  frame_el.addEventListener("pointermove", (ev) => {
-    const r = base.getBoundingClientRect();
-    const x = Math.floor(((ev.clientX - r.left) / r.width) * W);
-    const y = Math.floor(((ev.clientY - r.top) / r.height) * H);
-    if (px < 0) { px = x; py = y; }
-    e.wf_cut(px, py, x, y, CUT_R);
-    px = x; py = y;
-  });
-  frame_el.addEventListener("pointerleave", () => { px = py = -1; });
 
   let prev = performance.now();
   function frame(t) {

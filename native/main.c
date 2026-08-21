@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <stdalign.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -12,7 +13,7 @@
 #define H 24
 #define FRAME_NS 33333333L /* 30 fps */
 
-static alignas(4) unsigned char mem[W * H * 5 + W * 8];
+static alignas(4) unsigned char mem[FIELD_BYTES(W, H)];
 
 static double now_s(void)
 {
@@ -32,14 +33,18 @@ static void on_int(int sig)
 int main(void)
 {
     Field f;
+    struct winsize ws;
 
-    if (field_bytes(W, H) > sizeof mem) {
-        fprintf(stderr, "mem too small: need %zu\n", field_bytes(W, H));
+    if (ioctl(1, TIOCGWINSZ, &ws) == 0 && (ws.ws_col < W || ws.ws_row < H)) {
+        fprintf(stderr, "terminal too small: need %dx%d\n", W, H);
         return 1;
     }
     field_init(&f, W, H, (uint32_t)time(NULL), 0.94f, mem);
 
     signal(SIGINT, on_int);
+    signal(SIGTERM, on_int);
+    signal(SIGHUP, on_int);
+    signal(SIGQUIT, on_int);
     fputs("\x1b[2J\x1b[?25l", stdout);
 
     struct timespec deadline;
@@ -59,7 +64,8 @@ int main(void)
         fputs("\x1b[H", stdout);
         for (int y = 0; y < H; y++) {
             fwrite(chars + y * W, 1, W, stdout);
-            putchar('\n');
+            if (y < H - 1)
+                putchar('\n');
         }
         fflush(stdout);
 

@@ -50,11 +50,12 @@ static void column_shift(Field *f, int x, float head)
 
 size_t field_bytes(int w, int h)
 {
-    size_t n = (size_t)w * (size_t)h;
-    return n * sizeof(float)            /* v */
-         + (size_t)w * sizeof(float)    /* acc */
-         + (size_t)w * sizeof(uint32_t) /* count */
-         + n;                           /* chars */
+    return FIELD_BYTES(w, h);
+}
+
+const char *field_ramp(void)
+{
+    return RAMP;
 }
 
 void field_init(Field *f, int w, int h, uint32_t seed, float decay, void *mem)
