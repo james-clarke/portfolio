@@ -1,23 +1,20 @@
-const W = 140;
-const H = 48;
-const DECAY = 0.95;
+const CELL_PX = 15; /* target glyph size; grid density derives from it */
 const CUT_R = 2;
-const BASE_PX = 10;
-const SPEED_MIN = 6; /* rows per second, matches src/field.c */
+const DECAY_REF = 0.95; /* trail fade tuned at H_REF rows, rescaled to H */
+const H_REF = 48;
+const SPEED_MIN = 2.5; /* rows per second, matches src/field.c */
+const ONSET_S = 6; /* rain onset seconds, matches src/field.c */
 
 async function boot() {
   const res = await fetch("waterfall.wasm");
   const { instance } = await WebAssembly.instantiate(await res.arrayBuffer());
   const e = instance.exports;
 
-  if (e.wf_init(W, H, (Math.random() * 2 ** 32) >>> 0, DECAY) !== 0)
-    throw new Error("wf_init failed");
-
   const frame_el = document.getElementById("frame");
   const base = document.getElementById("field");
   const bright = document.getElementById("bright");
   const dec = new TextDecoder();
-  const bright_buf = new Uint8Array(W * H);
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // top three ramp glyphs get the glow overlay
   const rm = new Uint8Array(e.memory.buffer);
@@ -26,21 +23,40 @@ async function boot() {
   const is_bright = new Uint8Array(256);
   for (let i = Math.max(0, rlen - 3); i < rlen; i++) is_bright[rm[rp + i]] = 1;
 
-  // real glyphs before first frame so fit() measures true grid size
-  const blank = (" ".repeat(W) + "\n").repeat(H - 1) + " ".repeat(W);
-  base.textContent = blank;
-  bright.textContent = blank;
+  const phone = matchMedia("(max-width: 599px)"); /* matches #frame CSS */
+  let W = 0, H = 0, bright_buf = null, row_buf = null, brow_buf = null;
 
-  // scale via font-size
-  function fit() {
-    base.style.fontSize = bright.style.fontSize = `${BASE_PX}px`;
-    const s = frame_el.clientWidth / base.getBoundingClientRect().width;
-    if (!Number.isFinite(s) || s <= 0) return;
-    base.style.fontSize = bright.style.fontSize = `${BASE_PX * s}px`;
+  function rebuild() {
+    const fw = frame_el.clientWidth;
+    if (!(fw > 0)) return false;
+    base.style.fontSize = bright.style.fontSize = `${CELL_PX}px`;
+    base.textContent = "@".repeat(100);
+    const cw = base.getBoundingClientRect().width / 100;
+    if (!(cw > 0)) return false;
+    const aspect = phone.matches ? 0.9 : 4 / 7; /* taller frame on phones */
+    const w = Math.max(20, Math.floor(fw / cw));
+    const h = Math.max(12, Math.round((fw * aspect) / CELL_PX));
+    const changed = w !== W || h !== H;
+    if (changed) {
+      W = w;
+      H = h;
+      const decay = Math.pow(DECAY_REF, H_REF / H);
+      if (e.wf_init(W, H, (Math.random() * 2 ** 32) >>> 0, decay) !== 0)
+        throw new Error("wf_init failed");
+      bright_buf = new Uint8Array(W * H);
+      row_buf = new Uint8Array((W + 1) * H - 1).fill(32);
+      brow_buf = new Uint8Array((W + 1) * H - 1).fill(32);
+      for (let y = 1; y < H; y++)
+        row_buf[y * (W + 1) - 1] = brow_buf[y * (W + 1) - 1] = 10;
+    }
+    base.textContent = dec.decode(row_buf);
+    bright.textContent = dec.decode(brow_buf);
+    const s = fw / base.getBoundingClientRect().width;
+    if (Number.isFinite(s) && s > 0)
+      base.style.fontSize = bright.style.fontSize = `${CELL_PX * s}px`;
     frame_el.style.height = `${base.getBoundingClientRect().height}px`;
+    return changed;
   }
-  fit();
-  addEventListener("resize", fit);
 
   function draw() {
     const ptr = e.wf_chars();
@@ -49,17 +65,37 @@ async function boot() {
       const c = chars[i];
       bright_buf[i] = is_bright[c] ? c : 32;
     }
-    const rows = new Array(H);
-    const brows = new Array(H);
     for (let y = 0; y < H; y++) {
-      rows[y] = dec.decode(chars.subarray(y * W, (y + 1) * W));
-      brows[y] = dec.decode(bright_buf.subarray(y * W, (y + 1) * W));
+      row_buf.set(chars.subarray(y * W, (y + 1) * W), y * (W + 1));
+      brow_buf.set(bright_buf.subarray(y * W, (y + 1) * W), y * (W + 1));
     }
-    base.textContent = rows.join("\n");
-    bright.textContent = brows.join("\n");
+    base.textContent = dec.decode(row_buf);
+    bright.textContent = dec.decode(brow_buf);
   }
 
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // onset plus time for the slowest column to fill all H rows
+  function settle() {
+    const steps = Math.ceil((ONSET_S + H / SPEED_MIN) / 0.1);
+    for (let i = 0; i < steps; i++) e.wf_step(0.1);
+  }
+
+  rebuild();
+  if (reduced) {
+    settle();
+    draw();
+  }
+
+  let resize_t = 0;
+  addEventListener("resize", () => {
+    clearTimeout(resize_t);
+    resize_t = setTimeout(() => {
+      const changed = rebuild();
+      if (reduced) {
+        if (changed) settle();
+        draw();
+      }
+    }, 150);
+  });
 
   let px = 0, py = 0, has_prev = false;
   frame_el.addEventListener("pointermove", (ev) => {
@@ -76,14 +112,7 @@ async function boot() {
   });
   frame_el.addEventListener("pointerleave", () => { has_prev = false; });
 
-  if (reduced) {
-    // settle: long enough for the slowest column to fill all H rows
-    const steps = Math.ceil(H / SPEED_MIN / 0.1);
-    for (let i = 0; i < steps; i++)
-      e.wf_step(0.1);
-    draw();
-    return;
-  }
+  if (reduced) return;
 
   let prev = performance.now();
   function frame(t) {

@@ -7,7 +7,8 @@
 typedef struct {
     int w, h;
     uint32_t seed;
-    float decay;     /* per-shift trail fade; tune to h so streams survive it */
+    float decay;     /* per-shift trail fade */
+    float age;       /* seconds since init */
     float *v;        /* w*h cell intensity, 0..1 */
     float *acc;      /* w   column shift accumulator */
     uint32_t *count; /* w   shifts done per column */

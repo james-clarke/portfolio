@@ -4,9 +4,11 @@ static const char RAMP[] = " .:-=+*#%@";
 #define RAMP_MAX ((int)sizeof RAMP - 2)
 
 #define RUN 8u           /* spawn decided per 8-cell block */
-#define DENSITY 2u       /* 1 in 2 blocks is a stream */
-#define SPEED_MIN 6.0f   /* rows per second */
-#define SPEED_MAX 26.0f
+#define DENSITY 3u       /* 1 in 3 blocks is a stream */
+#define SPEED_MIN 2.5f   /* rows per second */
+#define SPEED_MAX 11.0f
+#define ONSET_S 6.0f     /* seconds from first drop to full rain */
+#define ONSET_SPEED 0.35f /* column speed factor at age 0 */
 
 /* lowbias32 finalizer */
 static uint32_t hash32(uint32_t x)
@@ -30,11 +32,22 @@ static float col_speed(uint32_t seed, int x)
     return SPEED_MIN + (SPEED_MAX - SPEED_MIN) * (float)(r & 0xffffu) / 65535.0f;
 }
 
+/* 0..1 storm intensity: quadratic ease-out over ONSET_S seconds */
+static float onset(float age)
+{
+    float t = age / ONSET_S;
+    if (t >= 1.0f)
+        return 1.0f;
+    return t * (2.0f - t);
+}
+
 /* value entering the top of column x on its n-th shift */
-static float spawn(uint32_t seed, int x, uint32_t n)
+static float spawn(uint32_t seed, int x, uint32_t n, float live)
 {
     uint32_t r = hash32(col_id(seed, x) ^ (n / RUN) * 0x85ebca6bu);
     if (r % DENSITY != 0)
+        return 0.0f;
+    if ((float)(hash32(r) & 0xffffu) > live * 65535.0f)
         return 0.0f;
     return 0.7f + 0.3f * (float)(hash32(r ^ n) & 0xffu) / 255.0f;
 }
@@ -67,6 +80,7 @@ void field_init(Field *f, int w, int h, uint32_t seed, float decay, void *mem)
     f->h = h;
     f->seed = seed;
     f->decay = decay;
+    f->age = 0.0f;
     f->v = (float *)p;
     p += n * sizeof(float);
     f->acc = (float *)p;
@@ -85,11 +99,15 @@ void field_init(Field *f, int w, int h, uint32_t seed, float decay, void *mem)
 
 void field_step(Field *f, float dt)
 {
+    float live = onset(f->age);
+    float k = ONSET_SPEED + (1.0f - ONSET_SPEED) * live;
+
+    f->age += dt;
     for (int x = 0; x < f->w; x++) {
-        f->acc[x] += col_speed(f->seed, x) * dt;
+        f->acc[x] += col_speed(f->seed, x) * k * dt;
         while (f->acc[x] >= 1.0f) {
             f->acc[x] -= 1.0f;
-            column_shift(f, x, spawn(f->seed, x, f->count[x]++));
+            column_shift(f, x, spawn(f->seed, x, f->count[x]++, live));
         }
     }
 }
