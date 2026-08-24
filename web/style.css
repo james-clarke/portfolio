@@ -66,10 +66,12 @@ header, #frame, #meta, h2, #work {
   font-weight: 600;
   letter-spacing: 0.08em;
 }
+#who .about,
 #who .links {
   margin: 0.35rem 0 0;
   font-size: 0.85rem;
 }
+#who .about { color: var(--dim); }
 h2 {
   margin: 0.75rem 0 0;
   font-size: 0.9rem;
@@ -88,18 +90,28 @@ h2 {
 }
 #work li {
   display: grid;
-  grid-template-columns: 4ch 1fr;
+  grid-template-columns: 4ch max-content 1fr;
 }
 #work li::before {
   counter-increment: proj;
   content: "0" counter(proj);
 }
-#work .desc::before { content: ", "; }
+#work .desc {
+  min-width: 0;
+  padding-left: 2ch;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 @media (max-width: 599px) {
   #frame { aspect-ratio: 10 / 9; }
+  #work li { grid-template-columns: 4ch 1fr; }
   #work .desc {
-    display: block;
+    grid-column: 2;
+    padding-left: 0;
+    text-align: left;
+    white-space: normal;
     font-size: 0.85rem;
   }
-  #work .desc::before { content: none; }
 }
