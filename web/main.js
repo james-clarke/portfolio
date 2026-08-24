@@ -1,13 +1,19 @@
-const CELL_PX = 15; /* target glyph size; grid density derives from it */
+const CELL_PX = 15;             /* target glyph size; grid density derives from it */
 const CUT_R = 2;
-const DECAY_REF = 0.95; /* trail fade tuned at H_REF rows, rescaled to H */
+const DECAY_REF = 0.95;         /* trail fade tuned at H_REF rows, rescaled to H */
 const H_REF = 48;
-const SPEED_MIN = 2.5; /* rows per second, matches src/field.c */
-const ONSET_S = 6; /* rain onset seconds, matches src/field.c */
+const SPEED_MIN = 2.5;          /* rows per second, matches src/field.c */
+const ONSET_S = 6;              /* rain onset seconds, matches src/field.c */
+const FRAME_MS = 33;            /* 30fps cap; rain tops out at 11 rows/s */
 
 async function boot() {
-  const res = await fetch("waterfall.wasm");
-  const { instance } = await WebAssembly.instantiate(await res.arrayBuffer());
+  let instance;
+  try {
+    ({ instance } = await WebAssembly.instantiateStreaming(fetch("waterfall.wasm")));
+  } catch {
+    const res = await fetch("waterfall.wasm");
+    ({ instance } = await WebAssembly.instantiate(await res.arrayBuffer()));
+  }
   const e = instance.exports;
 
   const frame_el = document.getElementById("frame");
@@ -20,8 +26,9 @@ async function boot() {
   const rm = new Uint8Array(e.memory.buffer);
   let rp = e.wf_ramp(), rlen = 0;
   while (rm[rp + rlen]) rlen++;
+  const ramp = rm.slice(rp, rp + rlen); /* copy out: memory growth detaches views */
   const is_bright = new Uint8Array(256);
-  for (let i = Math.max(0, rlen - 3); i < rlen; i++) is_bright[rm[rp + i]] = 1;
+  for (let i = Math.max(0, ramp.length - 3); i < ramp.length; i++) is_bright[ramp[i]] = 1;
 
   const phone = matchMedia("(max-width: 599px)"); /* matches #frame CSS */
   let W = 0, H = 0, bright_buf = null, row_buf = null, brow_buf = null;
@@ -116,14 +123,14 @@ async function boot() {
 
   let prev = performance.now();
   function frame(t) {
+    requestAnimationFrame(frame);
+    if (t - prev < FRAME_MS) return;
     let dt = (t - prev) / 1000;
     prev = t;
     if (dt > 0.1) dt = 0.1;
 
     e.wf_step(dt);
     draw();
-
-    requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 }
