@@ -9,11 +9,11 @@
 
 #include "field.h"
 
-#define W 80
-#define H 24
+#define MAXW 320
+#define MAXH 96
 #define FRAME_NS 33333333L /* 30 fps */
 
-static alignas(4) unsigned char mem[FIELD_BYTES(W, H)];
+static alignas(4) unsigned char mem[FIELD_BYTES(MAXW, MAXH)];
 
 static double now_s(void)
 {
@@ -34,12 +34,13 @@ int main(void)
 {
     Field f;
     struct winsize ws;
+    int w = 80, h = 24;
 
-    if (ioctl(1, TIOCGWINSZ, &ws) == 0 && (ws.ws_col < W || ws.ws_row < H)) {
-        fprintf(stderr, "terminal too small: need %dx%d\n", W, H);
-        return 1;
+    if (ioctl(1, TIOCGWINSZ, &ws) == 0 && ws.ws_col && ws.ws_row) {
+        w = ws.ws_col < MAXW ? ws.ws_col : MAXW;
+        h = ws.ws_row < MAXH ? ws.ws_row : MAXH;
     }
-    field_init(&f, W, H, (uint32_t)time(NULL), 0.94f, mem);
+    field_init(&f, w, h, (uint32_t)time(NULL), 0.94f, mem);
 
     signal(SIGINT, on_int);
     signal(SIGTERM, on_int);
@@ -62,9 +63,9 @@ int main(void)
         const char *chars = field_chars(&f);
 
         fputs("\x1b[H", stdout);
-        for (int y = 0; y < H; y++) {
-            fwrite(chars + y * W, 1, W, stdout);
-            if (y < H - 1)
+        for (int y = 0; y < h; y++) {
+            fwrite(chars + y * w, 1, w, stdout);
+            if (y < h - 1)
                 putchar('\n');
         }
         fflush(stdout);
