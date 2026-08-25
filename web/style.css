@@ -12,8 +12,9 @@
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] { color-scheme: dark; }
 html, body { margin: 0; background: var(--bg); }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
-  font: 16px/1.5 ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+  font: 1rem/1.5 ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
   color: var(--text);
   min-height: 100svh;
 }
@@ -21,7 +22,8 @@ a { color: var(--amber); text-decoration: none; }
 a:hover { text-decoration: underline; }
 header { display: flex; justify-content: flex-end; }
 #theme {
-  padding: 0.25rem;
+  padding: 0.5rem;
+  margin: -0.25rem;
   background: none;
   border: 0;
   font: inherit;
@@ -95,7 +97,7 @@ h2 {
   grid-template-columns: 1fr auto;
   gap: 2ch;
 }
-#posts time { font-size: 0.85rem; }
+#posts time { font-size: 0.85rem; white-space: nowrap; }
 #work li {
   display: grid;
   grid-template-columns: 4ch max-content 1fr;
@@ -115,6 +117,7 @@ h2 {
 main > article {
   width: min(100% - 2rem, 70ch);
   line-height: 1.6;
+  overflow-wrap: break-word;
 }
 article h1 {
   margin: 0.25rem 0 0;
@@ -132,7 +135,7 @@ article code { color: var(--code); }
 em { color: var(--em); font-style: normal; }
 article pre {
   margin: 1rem 0;
-  padding: 0.75rem 0 0.75rem 1rem;
+  padding: 0.75rem 1rem;
   border-left: 2px solid var(--code);
   overflow-x: auto;
   font-size: 0.85rem;
@@ -143,7 +146,10 @@ pre .k { color: var(--amber); }
 pre .n { color: var(--em); }
 pre .p { color: var(--dim); }
 @media (max-width: 599px) {
+  html { font-size: 15px; }
+  article pre { margin-inline: -1rem; }
   #frame { aspect-ratio: 10 / 9; }
+  #posts li { grid-template-columns: 1fr; gap: 0; }
   #work li { grid-template-columns: 4ch 1fr; }
   #work .desc {
     grid-column: 2;

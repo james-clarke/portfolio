@@ -13,18 +13,19 @@
 <body>
 <main>
   <article>
-    <p class="crumb"><a href="../">← back</a></p>
+    <p class="crumb"><a href="../">back</a></p>
     <h1>rain in wasm, in under 2k bytes</h1>
     <p class="date"><time datetime="2026-08-24">2026-08-24</time></p>
     <p>The raining ascii on my homepage was inspired by:
-    <a href="https://soohoonchoi.com/">soohoonchoi.com</a>.</p>
+    <a href="https://soohoonchoi.com/" target="_blank">soohoonchoi.com</a>.</p>
     <h2>rules first</h2>
     <p>No libc, no libm, no allocation, no globals. The caller
     hands over a single block of memory, and a macro sizes it at compile time.</p>
-    <pre><code><span class="p">#define</span> FIELD_BYTES(w, h)                          \
-    ((<span class="k">size_t</span>)(w) * (<span class="k">size_t</span>)(h) * <span class="k">sizeof</span>(<span class="k">float</span>)     \
-     + (<span class="k">size_t</span>)(w) * <span class="k">sizeof</span>(<span class="k">float</span>)                 \
-     + (<span class="k">size_t</span>)(w) * <span class="k">sizeof</span>(<span class="k">uint32_t</span>)              \
+    <pre><code><span class="p">#define</span> FIELD_BYTES(w, h) \
+    ((<span class="k">size_t</span>)(w) * (<span class="k">size_t</span>)(h) \
+         * <span class="k">sizeof</span>(<span class="k">float</span>) \
+     + (<span class="k">size_t</span>)(w) * <span class="k">sizeof</span>(<span class="k">float</span>) \
+     + (<span class="k">size_t</span>)(w) * <span class="k">sizeof</span>(<span class="k">uint32_t</span>) \
      + (<span class="k">size_t</span>)(w) * (<span class="k">size_t</span>)(h))</code></pre>
 
     <h2>the field</h2>
@@ -44,20 +45,24 @@
 
 <span class="k">static void</span> *balloc(<span class="k">size_t</span> n)
 {
-    <span class="k">uintptr_t</span> p = (next + <span class="n">15u</span>) &amp; ~(<span class="k">uintptr_t</span>)<span class="n">15u</span>;
+    <span class="k">uintptr_t</span> p =
+        (next + <span class="n">15u</span>) &amp; ~(<span class="k">uintptr_t</span>)<span class="n">15u</span>;
     <span class="k">uintptr_t</span> end = p + n;
-    <span class="k">size_t</span> have = __builtin_wasm_memory_size(<span class="n">0</span>) * PAGE;
+    <span class="k">size_t</span> have = PAGE
+        * __builtin_wasm_memory_size(<span class="n">0</span>);
 
     <span class="k">if</span> (end > have) {
-        <span class="k">size_t</span> pages = (end - have + PAGE - <span class="n">1</span>) / PAGE;
-        <span class="k">if</span> (__builtin_wasm_memory_grow(<span class="n">0</span>, pages) == (<span class="k">size_t</span>)-<span class="n">1</span>)
+        <span class="k">size_t</span> pages = (end - have
+            + PAGE - <span class="n">1</span>) / PAGE;
+        <span class="k">if</span> (__builtin_wasm_memory_grow(
+                <span class="n">0</span>, pages) == (<span class="k">size_t</span>)-<span class="n">1</span>)
             <span class="k">return</span> <span class="n">0</span>;
     }
     next = end;
     <span class="k">return</span> (<span class="k">void</span> *)p;
 }</code></pre>
 
-    <p>Source: <a href="https://github.com/james-clarke/portfolio">github.com/james-clarke/portfolio</a></p>
+    <p>Source: <a href="https://github.com/james-clarke/portfolio" target="_blank">github.com/james-clarke/portfolio</a></p>
   </article>
 </main>
 </body>
