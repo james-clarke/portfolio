@@ -1,6 +1,6 @@
 # portfolio
 
-<!-- demo.gif: terminal capture of build/native/waterfall -->
+![ascii rain in a terminal](demo.gif)
 
 ## layout
 
