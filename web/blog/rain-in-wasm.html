@@ -16,50 +16,30 @@
     <p class="crumb"><a href="../">← back</a></p>
     <h1>rain in wasm, in under 2k bytes</h1>
     <p class="date"><time datetime="2026-08-24">2026-08-24</time></p>
-
-    <p>I have been seeing a plethora of <em>greptile</em> comments on new PRs
-    at work. So much so, I decided to have a nosey around their public
-    <a href="https://github.com/greptileai/">github</a> page. One of their core
-    devs has this gem of a portfolio:
-    <a href="https://soohoonchoi.com/">soohoonchoi.com</a>, and the animation
-    inspired me so much, I wanted to take a stab at my own portfolio/blog.</p>
-    <p>So, here we are! The <em>ascii rainfall</em> you see on the homepage
-    was handwritten in C, compiled to a sub-2k-byte wasm module, and rendered
-    onto the page. I had a ton of fun coding this, and couldn't think of a
-    better way to break in the new site than by explaining that code here.</p>
-
+    <p>The raining ascii on my homepage was inspired by:
+    <a href="https://soohoonchoi.com/">soohoonchoi.com</a>.</p>
     <h2>rules first</h2>
-    <p>As a challenge for this project, the code obeyed four important rules:
-    no libc, no libm, no allocation, no globals. The caller hands over a single
-    block of memory, and a macro sizes it at compile time. This also meant the
-    terminal build could use a static buffer:</p>
+    <p>No libc, no libm, no allocation, no globals. The caller
+    hands over a single block of memory, and a macro sizes it at compile time.</p>
     <pre><code><span class="p">#define</span> FIELD_BYTES(w, h)                          \
     ((<span class="k">size_t</span>)(w) * (<span class="k">size_t</span>)(h) * <span class="k">sizeof</span>(<span class="k">float</span>)     \
      + (<span class="k">size_t</span>)(w) * <span class="k">sizeof</span>(<span class="k">float</span>)                 \
      + (<span class="k">size_t</span>)(w) * <span class="k">sizeof</span>(<span class="k">uint32_t</span>)              \
      + (<span class="k">size_t</span>)(w) * (<span class="k">size_t</span>)(h))</code></pre>
-    <p>Everything is flat buffers indexed <code>y*w + x</code>. Time arrives
-    as a <code>dt</code> parameter. Input arrives as function calls.</p>
 
     <h2>the field</h2>
-    <p>Each column is an independent stream of characters. A 32-bit hash of the
-    column index gives it a permanent speed between 2.5 and 11 rows per second.
-    A per-column accumulator collects <code>speed * dt</code>, and each time it
-    crosses 1, the column shifts down one cell. Each cell gets multiplied by a
-    decay factor so trails fade as they fall.</p>
+    <p>Each column is an independent stream of characters. I took a 32-bit hash 
+    of each column index to give it a permanent speed of 2.5-11 rows per second.
+    A per-column accumulator collects <code>speed * dt</code>, and each time we
+    cross 1, the column shifts down a single cell. Each cell gets multiplied by a
+    decay factor so it fades as it falls.</p>
     <p>The char entering at the top of the screen comes from hashing the column
-    and its shift count in blocks of eight. What's cool is that no state is
-    getting stored for any of this: the rain is a pure function of
+    and its shift count in blocks of eight. The rain is a pure function of
     <code>(seed, column, shift count)</code>.</p>
-    <p>The cursor interaction (if you had even noticed!) is surprisingly the
-    cheapest thing in the file. Moving the pointer rasterizes the segment since
-    its last event with Bresenham and stamps zeroes in a small radius.</p>
 
     <h2>freestanding wasm</h2>
-    <p>No emscripten (because why not?). The wasm build is
-    <code>clang --target=wasm32 -nostdlib</code>, that's it, meaning we don't
-    have any runtime at all. My custom allocator is just a bump pointer starting
-    at the address the linker marks as the end of static data:</p>
+    <p>No emscripten (because why not). The custom allocator is just a bump pointer 
+    starting at the address the linker marks as the end of static data:</p>
     <pre><code><span class="k">extern unsigned char</span> __heap_base;
 
 <span class="k">static void</span> *balloc(<span class="k">size_t</span> n)
@@ -76,9 +56,6 @@
     next = end;
     <span class="k">return</span> (<span class="k">void</span> *)p;
 }</code></pre>
-    <p>All in all, five exported functions: init, step, cut, chars, ramp.
-    Compiled with <code>-Oz</code> and <code>--strip-all</code>, cutting the
-    module down to 1755 bytes: smaller than most sites' favicons!!</p>
 
     <p>Source: <a href="https://github.com/james-clarke/portfolio">github.com/james-clarke/portfolio</a></p>
   </article>
