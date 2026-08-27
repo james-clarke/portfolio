@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark light">
 <meta name="description" content="Hand-written C rain animation that fits into 1755 bytes of WebAssembly.">
-<title>rain in wasm, in under 2k bytes</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%230a0908'/><text x='8' y='12.5' font-size='11' font-family='monospace' fill='%23ffb000' text-anchor='middle'>@</text></svg>">
+<title>rain in wasm</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%230a0a0a'/><text x='8' y='12.5' font-size='11' font-family='monospace' fill='%23fff' text-anchor='middle'>@</text></svg>">
 <script>try{const t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch{}</script>
 <link rel="stylesheet" href="../style.css">
 </head>
@@ -14,18 +14,17 @@
 <main>
   <article>
     <p class="crumb"><a href="../">back</a></p>
-    <h1>rain in wasm, in under 2k bytes</h1>
+    <h1>rain in wasm</h1>
     <p class="date"><time datetime="2026-08-24">2026-08-24</time></p>
     <p>The raining ascii on my homepage was inspired by:
     <a href="https://soohoonchoi.com/" target="_blank">soohoonchoi.com</a>.</p>
     <h2>rules first</h2>
     <p>No libc, no libm, no allocation, no globals. The caller
     hands over a single block of memory, and a macro sizes it at compile time.</p>
-    <pre><code><span class="p">#define</span> FIELD_BYTES(w, h) \
-    ((<span class="k">size_t</span>)(w) * (<span class="k">size_t</span>)(h) \
-         * <span class="k">sizeof</span>(<span class="k">float</span>) \
-     + (<span class="k">size_t</span>)(w) * <span class="k">sizeof</span>(<span class="k">float</span>) \
-     + (<span class="k">size_t</span>)(w) * <span class="k">sizeof</span>(<span class="k">uint32_t</span>) \
+    <pre><code><span class="p">#define</span> FIELD_BYTES(w, h)                          \
+    ((<span class="k">size_t</span>)(w) * (<span class="k">size_t</span>)(h) * <span class="k">sizeof</span>(<span class="k">float</span>)     \
+     + (<span class="k">size_t</span>)(w) * <span class="k">sizeof</span>(<span class="k">float</span>)                 \
+     + (<span class="k">size_t</span>)(w) * <span class="k">sizeof</span>(<span class="k">uint32_t</span>)              \
      + (<span class="k">size_t</span>)(w) * (<span class="k">size_t</span>)(h))</code></pre>
 
     <h2>the field</h2>
@@ -45,18 +44,14 @@
 
 <span class="k">static void</span> *balloc(<span class="k">size_t</span> n)
 {
-    <span class="k">uintptr_t</span> p =
-        (next + <span class="n">15u</span>) &amp; ~(<span class="k">uintptr_t</span>)<span class="n">15u</span>;
+    <span class="k">uintptr_t</span> p = (next + 15u) &amp; ~(<span class="k">uintptr_t</span>)15u;
     <span class="k">uintptr_t</span> end = p + n;
-    <span class="k">size_t</span> have = PAGE
-        * __builtin_wasm_memory_size(<span class="n">0</span>);
+    <span class="k">size_t</span> have = __builtin_wasm_memory_size(0) * PAGE;
 
     <span class="k">if</span> (end > have) {
-        <span class="k">size_t</span> pages = (end - have
-            + PAGE - <span class="n">1</span>) / PAGE;
-        <span class="k">if</span> (__builtin_wasm_memory_grow(
-                <span class="n">0</span>, pages) == (<span class="k">size_t</span>)-<span class="n">1</span>)
-            <span class="k">return</span> <span class="n">0</span>;
+        <span class="k">size_t</span> pages = (end - have + PAGE - 1) / PAGE;
+        <span class="k">if</span> (__builtin_wasm_memory_grow(0, pages) == (<span class="k">size_t</span>)-1)
+            <span class="k">return</span> 0;
     }
     next = end;
     <span class="k">return</span> (<span class="k">void</span> *)p;

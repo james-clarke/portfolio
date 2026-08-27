@@ -22,7 +22,7 @@ async function boot() {
   const dec = new TextDecoder();
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // top three ramp glyphs get the glow overlay
+  // top three ramp glyphs render on the bright overlay
   const rm = new Uint8Array(e.memory.buffer);
   let rp = e.wf_ramp(), rlen = 0;
   while (rm[rp + rlen]) rlen++;
@@ -146,7 +146,7 @@ function theme_mode() {
 }
 
 function theme_label() {
-  theme_btn.textContent = theme_mode() === "dark" ? "light" : "dark";
+  theme_btn.textContent = theme_mode() === "dark" ? "[light]" : "[dark]";
 }
 
 theme_btn.addEventListener("click", () => {

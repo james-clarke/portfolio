@@ -8,7 +8,7 @@
 | Interaction | cursor slices the water, flow refills the gap |
 | Build | gcc + gdb + ASan, then port |
 | WASM | `clang --target=wasm32 -nostdlib` |
-| Design | black page, amber accent, monospace |
+| Design | black page, grayscale, monospace |
 | Host | render.com static site |
 | Render | fixed logical grid |
 | Scope | render first; more changes pending
@@ -75,6 +75,6 @@ one shift per column tick:
 - [x] **t9 mouse:**
       Measure cell size from rendered font, `mousemove` -> segment rasterize -> `cut()`
 - [x] **t10 content:**
-      Name + info over the field, dark/amber palette, project list scaffold hidden
+      Name + info over the field, dark palette, project list scaffold hidden
 - [x] **t11 ship:**
       `-Oz` + `--strip-all`, committed `web/waterfall.wasm` (rebuild on C change), `render.yaml` static site
