@@ -1,12 +1,15 @@
 :root {
   color-scheme: dark light;
-  --bg: light-dark(#fff, #0a0a0a);
-  --text: light-dark(#111, #ddd);
-  --bright: light-dark(#000, #fff);
-  --dim: light-dark(#666, #808080);
+  --bg: #fff;
+  --text: #111;
+  --bright: #000;
+  --dim: #666;
 }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0a0a0a; --text: #ddd; --bright: #fff; --dim: #808080; }
+}
+:root[data-theme="dark"] { color-scheme: dark; --bg: #0a0a0a; --text: #ddd; --bright: #fff; --dim: #808080; }
 :root[data-theme="light"] { color-scheme: light; }
-:root[data-theme="dark"] { color-scheme: dark; }
 html, body { margin: 0; background: var(--bg); }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {

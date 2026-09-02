@@ -31,6 +31,9 @@ void field_init(Field *f, int w, int h, uint32_t seed, float decay, void *mem);
 /* Advance columns by dt seconds. */
 void field_step(Field *f, float dt);
 
+/* Advance to full rain: onset plus the slowest column filling h rows. */
+void field_settle(Field *f);
+
 /* Zero cells within radius r of segment (x0,y0)-(x1,y1). Clips to bounds. */
 void field_cut(Field *f, int x0, int y0, int x1, int y1, int r);
 

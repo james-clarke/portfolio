@@ -2,8 +2,6 @@ const CELL_PX = 15;             /* target glyph size; grid density derives from 
 const CUT_R = 2;
 const DECAY_REF = 0.95;         /* trail fade tuned at H_REF rows, rescaled to H */
 const H_REF = 48;
-const SPEED_MIN = 2.5;          /* rows per second, matches src/field.c */
-const ONSET_S = 6;              /* rain onset seconds, matches src/field.c */
 const FRAME_MS = 33;            /* 30fps cap; rain tops out at 11 rows/s */
 
 async function boot() {
@@ -80,15 +78,9 @@ async function boot() {
     bright.textContent = dec.decode(brow_buf);
   }
 
-  // onset plus time for the slowest column to fill all H rows
-  function settle() {
-    const steps = Math.ceil((ONSET_S + H / SPEED_MIN) / 0.1);
-    for (let i = 0; i < steps; i++) e.wf_step(0.1);
-  }
-
   rebuild();
   if (reduced) {
-    settle();
+    e.wf_settle();
     draw();
   }
 
@@ -96,11 +88,8 @@ async function boot() {
   addEventListener("resize", () => {
     clearTimeout(resize_t);
     resize_t = setTimeout(() => {
-      const changed = rebuild();
-      if (reduced) {
-        if (changed) settle();
-        draw();
-      }
+      if (rebuild()) e.wf_settle();
+      if (reduced) draw();
     }, 150);
   });
 
@@ -135,7 +124,7 @@ async function boot() {
   requestAnimationFrame(frame);
 }
 
-boot();
+boot().catch(() => { document.getElementById("frame").hidden = true; });
 
 const root = document.documentElement;
 const theme_btn = document.getElementById("theme");

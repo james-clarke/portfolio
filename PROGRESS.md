@@ -8,7 +8,7 @@
 | Interaction | cursor slices the water, flow refills the gap |
 | Build | gcc + gdb + ASan, then port |
 | WASM | `clang --target=wasm32 -nostdlib` |
-| Design | black page, grayscale, monospace |
+| Design | dark or light page, grayscale, monospace |
 | Host | render.com static site |
 | Render | fixed logical grid |
 | Scope | render first; more changes pending

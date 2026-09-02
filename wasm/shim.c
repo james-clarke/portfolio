@@ -9,23 +9,6 @@ extern unsigned char __heap_base;
 static uintptr_t next;
 static Field f;
 
-void *memset(void *s, int c, size_t n)
-{
-    unsigned char *p = s;
-    while (n--)
-        *p++ = (unsigned char)c;
-    return s;
-}
-
-void *memcpy(void *restrict d, const void *restrict s, size_t n)
-{
-    unsigned char *dp = d;
-    const unsigned char *sp = s;
-    while (n--)
-        *dp++ = *sp++;
-    return d;
-}
-
 static void *balloc(size_t n)
 {
     uintptr_t p = (next + 15u) & ~(uintptr_t)15u;
@@ -58,6 +41,12 @@ EXPORT("wf_step")
 void wf_step(float dt)
 {
     field_step(&f, dt);
+}
+
+EXPORT("wf_settle")
+void wf_settle(void)
+{
+    field_settle(&f);
 }
 
 EXPORT("wf_cut")

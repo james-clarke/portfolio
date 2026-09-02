@@ -112,6 +112,13 @@ void field_step(Field *f, float dt)
     }
 }
 
+void field_settle(Field *f)
+{
+    int n = (int)((ONSET_S + (float)f->h / SPEED_MIN) / 0.1f) + 1;
+    while (n--)
+        field_step(f, 0.1f);
+}
+
 static void stamp(Field *f, int cx, int cy, int r)
 {
     for (int dy = -r; dy <= r; dy++)
