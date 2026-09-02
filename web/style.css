@@ -101,9 +101,4 @@ h2 {
 @media (max-width: 599px) {
   html { font-size: 15px; }
   #frame { aspect-ratio: 10 / 9; }
-  #work li { grid-template-columns: 1fr; }
-  #work .desc {
-    padding-left: 0;
-    text-align: left;
-  }
 }
