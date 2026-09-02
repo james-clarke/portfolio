@@ -78,7 +78,7 @@ h2 {
   font-weight: 600;
   color: var(--dim);
 }
-#work, #posts {
+#work {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -86,12 +86,6 @@ h2 {
   gap: 0.5rem;
   color: var(--dim);
 }
-#posts li {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2ch;
-}
-#posts time { white-space: nowrap; }
 #work li {
   display: grid;
   grid-template-columns: max-content 1fr;
@@ -101,40 +95,9 @@ h2 {
   padding-left: 2ch;
   text-align: right;
 }
-main > article {
-  width: min(100% - 2rem, 70ch);
-  line-height: 1.6;
-  overflow-wrap: break-word;
-}
-article h1 {
-  margin: 0.25rem 0 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-article .date {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--dim);
-}
-article .crumb { margin: 0; font-size: 0.85rem; }
-article code { color: var(--bright); }
-em { color: var(--bright); font-weight: 600; font-style: normal; }
-article pre {
-  margin: 1rem 0;
-  padding: 0.75rem 1rem;
-  border-left: 2px solid var(--dim);
-  overflow-x: auto;
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-article pre code { color: inherit; }
-pre .k { font-weight: 600; }
-pre .p { color: var(--dim); }
 @media (max-width: 599px) {
   html { font-size: 15px; }
-  article pre { margin-inline: -1rem; }
   #frame { aspect-ratio: 10 / 9; }
-  #posts li { grid-template-columns: 1fr; gap: 0; }
   #work li { grid-template-columns: 1fr; }
   #work .desc {
     padding-left: 0;
