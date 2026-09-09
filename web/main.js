@@ -1,8 +1,8 @@
-const CELL_PX = 15;             /* target glyph size; grid density derives from it */
-const CUT_R = 2;
-const DECAY_REF = 0.95;         /* trail fade tuned at H_REF rows, rescaled to H */
-const H_REF = 48;
-const FRAME_MS = 33;            /* 30fps cap; rain tops out at 11 rows/s */
+const CELL_PX = 8;              /* target glyph size; grid density derives from it */
+const FRAME_MS = 33;            /* 30fps cap */
+const LINES = ["JAMES", "CLARKE"];
+const FILL = 0.9;               /* share of the frame the letters may use */
+const STROKE = 0.07;            /* extra letter weight, share of the font size */
 
 async function boot() {
   let instance;
@@ -31,6 +31,46 @@ async function boot() {
   const phone = matchMedia("(max-width: 599px)"); /* matches #frame CSS */
   let W = 0, H = 0, bright_buf = null, row_buf = null, brow_buf = null;
 
+  // letters drawn at screen scale, averaged into one coverage byte per cell
+  function mask(cw, ch) {
+    const pw = Math.round(W * cw), ph = Math.round(H * ch);
+    const cv = document.createElement("canvas");
+    cv.width = pw;
+    cv.height = ph;
+    const ctx = cv.getContext("2d", { willReadFrequently: true });
+    let size = (ph * FILL) / (LINES.length * 1.1);
+    ctx.font = `bold ${size}px monospace`;
+    const widest = Math.max(...LINES.map((s) => ctx.measureText(s).width));
+    if (widest + size * STROKE > pw * FILL) {
+      size *= (pw * FILL) / (widest + size * STROKE);
+      ctx.font = `bold ${size}px monospace`;
+    }
+    ctx.fillStyle = ctx.strokeStyle = "#fff";
+    ctx.lineWidth = size * STROKE;
+    ctx.lineJoin = "round";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const top = (ph - LINES.length * size * 1.1) / 2;
+    LINES.forEach((s, i) => {
+      const y = top + (i + 0.5) * size * 1.1;
+      ctx.strokeText(s, pw / 2, y);
+      ctx.fillText(s, pw / 2, y);
+    });
+    const px = ctx.getImageData(0, 0, pw, ph).data;
+    const m = new Uint8Array(e.memory.buffer, e.wf_mask(), W * H);
+    for (let y = 0; y < H; y++) {
+      const y0 = Math.floor(y * ch), y1 = Math.min(ph, Math.floor((y + 1) * ch));
+      for (let x = 0; x < W; x++) {
+        const x0 = Math.floor(x * cw), x1 = Math.min(pw, Math.floor((x + 1) * cw));
+        let sum = 0, n = 0;
+        for (let yy = y0; yy < y1; yy++)
+          for (let xx = x0; xx < x1; xx++) { sum += px[(yy * pw + xx) * 4 + 3]; n++; }
+        m[y * W + x] = n ? sum / n : 0;
+      }
+    }
+    e.wf_seed();
+  }
+
   function rebuild() {
     const fw = frame_el.clientWidth;
     if (!(fw > 0)) return false;
@@ -45,9 +85,9 @@ async function boot() {
     if (changed) {
       W = w;
       H = h;
-      const decay = Math.pow(DECAY_REF, H_REF / H);
-      if (e.wf_init(W, H, (Math.random() * 2 ** 32) >>> 0, decay) !== 0)
+      if (e.wf_init(W, H, (Math.random() * 2 ** 32) >>> 0, cw / CELL_PX) !== 0)
         throw new Error("wf_init failed");
+      mask(cw, CELL_PX);
       bright_buf = new Uint8Array(W * H);
       row_buf = new Uint8Array((W + 1) * H - 1).fill(32);
       brow_buf = new Uint8Array((W + 1) * H - 1).fill(32);
@@ -88,25 +128,12 @@ async function boot() {
   addEventListener("resize", () => {
     clearTimeout(resize_t);
     resize_t = setTimeout(() => {
-      if (rebuild()) e.wf_settle();
-      if (reduced) draw();
+      if (rebuild() && reduced) {
+        e.wf_settle();
+        draw();
+      }
     }, 150);
   });
-
-  let px = 0, py = 0, has_prev = false;
-  frame_el.addEventListener("pointermove", (ev) => {
-    const r = base.getBoundingClientRect();
-    if (!(r.width > 0 && r.height > 0)) return;
-    let x = Math.floor(((ev.clientX - r.left) / r.width) * W);
-    let y = Math.floor(((ev.clientY - r.top) / r.height) * H);
-    x = x < 0 ? 0 : x >= W ? W - 1 : x;
-    y = y < 0 ? 0 : y >= H ? H - 1 : y;
-    if (!has_prev) { px = x; py = y; has_prev = true; }
-    e.wf_cut(px, py, x, y, CUT_R);
-    px = x; py = y;
-    if (reduced) draw();
-  });
-  frame_el.addEventListener("pointerleave", () => { has_prev = false; });
 
   if (reduced) return;
 

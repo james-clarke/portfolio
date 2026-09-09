@@ -25,7 +25,7 @@ static void *balloc(size_t n)
 }
 
 EXPORT("wf_init")
-int wf_init(int w, int h, uint32_t seed, float decay)
+int wf_init(int w, int h, uint32_t seed, float aspect)
 {
     if (w <= 0 || h <= 0 || w > 4096 || h > 4096)
         return -1;
@@ -33,8 +33,20 @@ int wf_init(int w, int h, uint32_t seed, float decay)
     void *mem = balloc(field_bytes(w, h));
     if (!mem)
         return -1;
-    field_init(&f, w, h, seed, decay, mem);
+    field_init(&f, w, h, seed, aspect, mem);
     return 0;
+}
+
+EXPORT("wf_mask")
+uint8_t *wf_mask(void)
+{
+    return field_mask(&f);
+}
+
+EXPORT("wf_seed")
+void wf_seed(void)
+{
+    field_seed(&f);
 }
 
 EXPORT("wf_step")
@@ -47,12 +59,6 @@ EXPORT("wf_settle")
 void wf_settle(void)
 {
     field_settle(&f);
-}
-
-EXPORT("wf_cut")
-void wf_cut(int x0, int y0, int x1, int y1, int r)
-{
-    field_cut(&f, x0, y0, x1, y1, r);
 }
 
 EXPORT("wf_chars")

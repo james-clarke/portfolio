@@ -40,7 +40,6 @@ main > * {
 #frame {
   position: relative;
   overflow: hidden;
-  touch-action: pan-y;
   aspect-ratio: 7 / 4;
 }
 #field, #bright {
@@ -53,35 +52,21 @@ main > * {
 }
 #field { color: var(--dim); }
 #bright { color: var(--bright); }
-#meta {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0 1rem;
-}
-#meta .links { margin: 0; }
-#who h1 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-.cursor {
-  margin-left: 0.25ch;
-  user-select: none;
-  animation: blink 1s steps(1) infinite;
-}
-@keyframes blink { 50% { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) {
-  .cursor { animation: none; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 h2 {
   margin: 0.75rem 0 0;
-  font-size: 1rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--dim);
 }
-#work {
+.list {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -89,14 +74,13 @@ h2 {
   gap: 0.5rem;
   color: var(--dim);
 }
-#work li {
+.list li {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  grid-template-columns: 10ch 1fr;
 }
-#work .desc {
+.list .desc {
   min-width: 0;
-  padding-left: 2ch;
-  text-align: right;
+  overflow-wrap: anywhere;
 }
 @media (max-width: 599px) {
   html { font-size: 15px; }
