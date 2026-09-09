@@ -1,4 +1,5 @@
 const CELL_PX = 8;              /* target glyph size; grid density derives from it */
+const PHONE_PX = 6;             /* denser grid so the small letters keep their counters */
 const FRAME_MS = 33;            /* 30fps cap */
 const LINES = ["JAMES", "CLARKE"];
 const FILL = 0.9;               /* share of the frame the letters may use */
@@ -74,20 +75,21 @@ async function boot() {
   function rebuild() {
     const fw = frame_el.clientWidth;
     if (!(fw > 0)) return false;
-    base.style.fontSize = bright.style.fontSize = `${CELL_PX}px`;
+    const cell = phone.matches ? PHONE_PX : CELL_PX;
+    base.style.fontSize = bright.style.fontSize = `${cell}px`;
     base.textContent = "@".repeat(100);
     const cw = base.getBoundingClientRect().width / 100;
     if (!(cw > 0)) return false;
     const aspect = phone.matches ? 0.9 : 4 / 7; /* taller frame on phones */
     const w = Math.max(20, Math.floor(fw / cw));
-    const h = Math.max(12, Math.round((fw * aspect) / CELL_PX));
+    const h = Math.max(12, Math.round((fw * aspect) / cell));
     const changed = w !== W || h !== H;
     if (changed) {
       W = w;
       H = h;
-      if (e.wf_init(W, H, (Math.random() * 2 ** 32) >>> 0, cw / CELL_PX) !== 0)
+      if (e.wf_init(W, H, (Math.random() * 2 ** 32) >>> 0, cw / cell) !== 0)
         throw new Error("wf_init failed");
-      mask(cw, CELL_PX);
+      mask(cw, cell);
       bright_buf = new Uint8Array(W * H);
       row_buf = new Uint8Array((W + 1) * H - 1).fill(32);
       brow_buf = new Uint8Array((W + 1) * H - 1).fill(32);
@@ -98,7 +100,7 @@ async function boot() {
     bright.textContent = dec.decode(brow_buf);
     const s = fw / base.getBoundingClientRect().width;
     if (Number.isFinite(s) && s > 0)
-      base.style.fontSize = bright.style.fontSize = `${CELL_PX * s}px`;
+      base.style.fontSize = bright.style.fontSize = `${cell * s}px`;
     frame_el.style.height = `${base.getBoundingClientRect().height}px`;
     return changed;
   }

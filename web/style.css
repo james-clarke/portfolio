@@ -30,12 +30,10 @@ header { display: flex; justify-content: flex-end; }
 }
 main {
   display: grid;
-  justify-items: center;
   gap: 0.75rem;
-  padding: clamp(0.75rem, 2.5vw, 1.25rem) 0 clamp(2rem, 8vw, 3.5rem);
-}
-main > * {
   width: min(100% - 2rem, 80ch);
+  margin: 0 auto;
+  padding: clamp(0.75rem, 2.5vw, 1.25rem) 0 clamp(2rem, 8vw, 3.5rem);
 }
 #frame {
   position: relative;
@@ -68,16 +66,14 @@ h2 {
 }
 .list {
   margin: 0;
-  padding: 0;
+  padding: 0 0 0 1ch;
   list-style: none;
   display: grid;
+  grid-template-columns: 12ch 1fr;
   gap: 0.5rem;
   color: var(--dim);
 }
-.list li {
-  display: grid;
-  grid-template-columns: 10ch 1fr;
-}
+.list li { display: contents; }
 .list .desc {
   min-width: 0;
   overflow-wrap: anywhere;
