@@ -1,6 +1,6 @@
 # portfolio
 
-![ascii rain in a terminal](demo.gif)
+![reaction-diffusion name in a terminal](demo.gif)
 
 ## layout
 
